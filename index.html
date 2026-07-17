@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  JRZ DRIFT ART — หน้า "สะพาน" สำหรับแชร์ลิงก์บน Facebook / Instagram / LINE
+  ============================================================================
+
+  ปัญหา: ลิงก์ script.google.com/macros/.../exec เปิดในเบราว์เซอร์ในแอปเฟซบุ๊ก
+  แล้ว Google ตอบกลับมาเป็นคำว่า "undefined" (บั๊กฝั่ง Google — ปิดเป็น Won't Fix
+  ใน issuetracker.google.com/issues/393942200 แก้ในโค้ด Apps Script ไม่ได้)
+
+  วิธีใช้ไฟล์นี้:
+  1. วางลิงก์เว็บจริง (ลงท้าย /exec) แทนที่ค่า TARGET_URL ข้างล่าง (ในแท็ก script)
+  2. เอาไฟล์นี้ไปโฮสต์นอก Google เช่น GitHub Pages / Cloudflare Pages / Netlify
+     ** ไฟล์นี้ไม่ต้องอัปโหลดเข้า Apps Script — อัปโหลดไปก็ไม่ช่วยอะไร **
+  3. เวลาโพสต์/แชร์บนเฟซ ให้แชร์ "ลิงก์ของหน้านี้" แทนลิงก์ script.google.com
+  4. หน้าจะเด้งลูกค้าออกไปเบราว์เซอร์จริง (Chrome/Safari) แล้วเปิดหน้าร้านอัตโนมัติ
+
+  ทดสอบ: เปิดไฟล์นี้ต่อท้ายด้วย ?demo=1 เพื่อดูหน้าตา "คู่มือเปิดเอง" โดยไม่เด้งไปไหน
+  ============================================================================
+-->
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JRZ DRIFT ART — กำลังเปิดหน้าร้าน</title>
+<meta property="og:title" content="JRZ DRIFT ART">
+<meta property="og:description" content="รับทำลายรถดริฟต์ ดูรถ สั่งซื้อ และจองคิวได้เลย">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#060606; --card:#101010; --line:#2a2a2a;
+    --gold:#c9a84c; --silver:#b0b0b0; --platinum:#efefef;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(1200px 600px at 50% -10%, #171308 0%, var(--bg) 55%);
+    font-family:'Kanit',system-ui,-apple-system,sans-serif;color:var(--platinum);
+    padding:24px 16px;
+  }
+  .card{
+    width:100%;max-width:420px;text-align:center;
+    background:linear-gradient(180deg,#121212 0%,#0b0b0b 100%);
+    border:1px solid var(--line);border-radius:18px;padding:36px 24px 28px;
+    box-shadow:0 20px 60px rgba(0,0,0,.55);
+  }
+  .brand{font-weight:700;font-size:1.55rem;letter-spacing:.14em;color:var(--gold)}
+  .brand small{display:block;font-weight:300;font-size:.78rem;letter-spacing:.42em;color:var(--silver);margin-top:2px}
+  .spin{
+    width:42px;height:42px;margin:26px auto 14px;border-radius:50%;
+    border:3px solid rgba(201,168,76,.18);border-top-color:var(--gold);
+    animation:sp .8s linear infinite;
+  }
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .msg{font-weight:300;color:var(--silver);font-size:.95rem}
+  #manual{display:none;margin-top:26px;text-align:left}
+  #manual.show{display:block}
+  #manual h2{font-size:1rem;font-weight:600;color:var(--gold);text-align:center;margin-bottom:14px}
+  .step{
+    display:flex;gap:12px;align-items:flex-start;
+    background:#0e0e0e;border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;margin-bottom:10px;font-size:.9rem;font-weight:300;
+  }
+  .step b{color:var(--platinum);font-weight:600}
+  .n{
+    flex:0 0 26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:var(--gold);color:#111;font-weight:700;font-size:.85rem;
+  }
+  .btn{
+    display:block;width:100%;margin-top:12px;padding:13px 16px;border-radius:12px;
+    font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;
+    border:1px solid var(--gold);background:linear-gradient(180deg,#d9bb60,#b8963c);color:#141414;
+  }
+  .btn.ghost{background:transparent;color:var(--gold);font-weight:400}
+  .hint{margin-top:14px;font-size:.78rem;color:#7d7d7d;font-weight:300;text-align:center}
+  #setup{display:none;margin-top:22px;text-align:left;border:1px dashed var(--gold);border-radius:12px;padding:14px;font-size:.85rem;font-weight:300;color:var(--silver)}
+  #setup.show{display:block}
+  #setup code{color:var(--gold);font-size:.8rem;word-break:break-all}
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand">JRZ DRIFT ART<small>DRIFT &nbsp;•&nbsp; ART &nbsp;•&nbsp; GARAGE</small></div>
+    <div class="spin" id="spin"></div>
+    <p class="msg" id="msg">กำลังพาไปที่หน้าร้าน…</p>
+
+    <section id="manual">
+      <h2>เปิดหน้าร้านในเบราว์เซอร์ (แตะตามนี้)</h2>
+      <div class="step"><span class="n">1</span><span>แตะปุ่ม <b>⋯</b> (จุดสามจุด) ที่มุมของหน้าจอ</span></div>
+      <div class="step"><span class="n">2</span><span>เลือก <b>“เปิดในเบราว์เซอร์”</b> หรือ <b>“Open in external browser”</b></span></div>
+      <a class="btn" id="retryBtn" href="#" rel="noopener">ลองเปิดอัตโนมัติอีกครั้ง</a>
+      <button class="btn ghost" id="copyBtn" type="button">คัดลอกลิงก์หน้าร้าน</button>
+      <p class="hint">เบราว์เซอร์ในแอปเฟซบุ๊ก/ไอจีเปิดเว็บนี้ไม่ได้ ต้องเปิดใน Chrome หรือ Safari</p>
+    </section>
+
+    <section id="setup">
+      <b style="color:var(--gold)">ยังไม่ได้ตั้งค่า (ข้อความนี้เห็นเฉพาะเจ้าของร้าน):</b><br>
+      เปิดไฟล์ <code>fb-open.html</code> แล้ววางลิงก์เว็บจริง (ลงท้าย <code>/exec</code>)
+      แทนที่ค่า <code>TARGET_URL</code> ด้านบนสุดของแท็ก script จากนั้นอัปโหลดขึ้นโฮสต์อีกครั้ง
+    </section>
+  </main>
+
+<script>
+/* ================================================================
+   วางลิงก์เว็บ Apps Script ของร้าน (ลงท้าย /exec) ตรงนี้ที่เดียวพอ
+   ================================================================ */
+var TARGET_URL = 'https://script.google.com/macros/s/AKfycbyngS31eTu-8nXgxmqPSHXvw5-rcDi_t8p_DmLwI-iPk5tZmyZtD7e0B1hnvMKN14EO/exec';
+
+/* ---------- ตรวจว่าเปิดจากเบราว์เซอร์ในแอปไหน + ระบบอะไร ---------- */
+function jrzDetect(ua) {
+  ua = ua || '';
+  var app = '';
+  if (/FBAN|FBAV|FB_IAB|FBIOS|FB4A|MessengerFor|Orca-Android/i.test(ua)) app = 'facebook';
+  else if (/Instagram/i.test(ua)) app = 'instagram';
+  else if (/\bLine\//i.test(ua)) app = 'line';
+  else if (/MicroMessenger/i.test(ua)) app = 'wechat';
+  else if (/TikTok|musical_ly|Bytedance/i.test(ua)) app = 'tiktok';
+  var os = /android/i.test(ua) ? 'android' : (/iPhone|iPad|iPod/i.test(ua) ? 'ios' : 'other');
+  return { app: app, os: os, inApp: !!app };
+}
+
+/* ---------- เลือกวิธีเด้งออกไปเบราว์เซอร์จริง ตามแอป/ระบบ ---------- */
+function jrzPlan(ua, target) {
+  var d = jrzDetect(ua);
+  if (!d.inApp) return { action: 'direct', url: target, env: d };
+  if (d.app === 'line') {
+    var sep = target.indexOf('?') > -1 ? '&' : '?';
+    return { action: 'line', url: target + sep + 'openExternalBrowser=1', env: d };
+  }
+  if (d.os === 'android') {
+    return {
+      action: 'intent',
+      url: 'intent://' + target.replace(/^https?:\/\//, '') +
+           '#Intent;scheme=https;action=android.intent.action.VIEW;' +
+           'category=android.intent.category.BROWSABLE;' +
+           'S.browser_fallback_url=' + encodeURIComponent(target) + ';end',
+      env: d
+    };
+  }
+  if (d.os === 'ios') return { action: 'safari', url: 'x-safari-' + target, env: d };
+  return { action: 'manual', url: target, env: d };
+}
+
+/* ------------------------------ ทำงานจริง ------------------------------ */
+(function () {
+  var params = new URLSearchParams(location.search);
+  var isTest = params.get('test') === '1';   // โหมดทดสอบ: ไม่เด้งไปไหน
+  var isDemo = params.get('demo') === '1';   // โหมดพรีวิวหน้าคู่มือ
+
+  var manualEl = document.getElementById('manual');
+  var msgEl = document.getElementById('msg');
+  var spinEl = document.getElementById('spin');
+  var manualTimer = null;
+
+  function showManual() {
+    spinEl.style.display = 'none';
+    msgEl.textContent = 'เปิดอัตโนมัติไม่สำเร็จ — เปิดเองได้ง่ายๆ ตามนี้';
+    manualEl.classList.add('show');
+  }
+
+  // ถ้าเด้งออกสำเร็จ หน้าจะถูกซ่อน → ไม่ต้องโชว์คู่มือ
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden && manualTimer) clearTimeout(manualTimer);
+  });
+
+  function runEscape() {
+    var plan = jrzPlan(navigator.userAgent, TARGET_URL);
+    if (plan.action === 'direct' || plan.action === 'line') {
+      location.replace(plan.url);
+    } else if (plan.action === 'intent' || plan.action === 'safari') {
+      location.href = plan.url;
+      manualTimer = setTimeout(showManual, 1600);
+    } else {
+      showManual();
+    }
+    return plan;
+  }
+
+  document.getElementById('retryBtn').addEventListener('click', function (e) {
+    e.preventDefault();
+    runEscape();
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', function () {
+    var btn = this;
+    function done() { btn.textContent = 'คัดลอกแล้ว ✓ ไปวางใน Chrome/Safari ได้เลย'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(TARGET_URL).then(done, function () { fallbackCopy(); });
+    } else { fallbackCopy(); }
+    function fallbackCopy() {
+      var ta = document.createElement('textarea');
+      ta.value = TARGET_URL;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch (err) {}
+      document.body.removeChild(ta);
+    }
+  });
+
+  // ยังไม่ได้วางลิงก์จริง → โชว์ข้อความตั้งค่าสำหรับเจ้าของร้าน
+  if (TARGET_URL.indexOf('https://') !== 0) {
+    spinEl.style.display = 'none';
+    msgEl.textContent = '';
+    document.getElementById('setup').classList.add('show');
+    return;
+  }
+  if (isDemo) { showManual(); return; }
+  if (isTest) { msgEl.textContent = 'โหมดทดสอบ (ไม่เด้งอัตโนมัติ)'; return; }
+  runEscape();
+})();
+</script>
+</body>
+</html>
